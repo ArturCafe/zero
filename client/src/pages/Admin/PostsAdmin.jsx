@@ -1,26 +1,12 @@
-import React, {  useRef } from "react";
+
+import React from "react";
+import useCategory from "../../hooks/useCategory";
 import AdminMenu from "../../components/Layout/AdminMenu";
 import Layout from "../../components/Layout/Layout";
-import useGetPosts from "../../hooks/useGetPosts";
-import { BACKEND_VPS } from "../../config/constants";
-import { BACKEND_URI } from "../../config/constants";
 import { Link } from "react-router-dom";
 
 const PostsAdmin = () => {
-  const posts = useGetPosts();
-  
-      
-  const videoRefs = useRef([]); // Ref pentru a accesa fiecare video
-
-
-   // Funcția care oprește alte videoclipuri
-   const handleVideoPlay = (index) => {
-    videoRefs.current.forEach((video, i) => {
-      if (i !== index && video) {
-        video.pause(); // Oprește toate videoclipurile în afară de cel curent
-      }
-    });
-  };
+  const categories = useCategory();
 
   return (
     <Layout>
@@ -29,48 +15,36 @@ const PostsAdmin = () => {
           <AdminMenu />
         </div>
         <div className="col-md-9">
-          <h1 className="text-center">Select Post for Update in List</h1>
-          <div className="d-flex flex-wrap">
-            {posts?.map((p, index) => (
-              <Link
-                key={p._id}
-                to={`/dashboard/admin/post/${p._id}`}
-                className="product-link"
-              >
-                <div className="card m-2" style={{ width: "18rem" }}>
-                  {p.photo?.length > 0 ? (
-                    <div>
+          <h1 className="text-center">Select a Category to Manage Posts</h1>
+          <div className="d-flex flex-wrap justify-content-center">
+            {categories.length > 0 ? (
+              categories.map((cat) => (
+                <Link
+                  key={cat._id}
+                  to={`/dashboard/admin/categoryposts/${cat._id}`}
+                  className="product-link text-decoration-none"
+                >
+                  <div className="card m-2 p-3 rounded shadow-sm" style={{ width: "18rem" }}>
+                    {cat.photo ? (
                       <img
-                        src={`${BACKEND_URI }${p.photo}`}
-                        className="card-img-top"
-                        alt={p.name || "Post image"}
+                        src={cat.photo}
+                        className="card-img-top rounded"
+                        alt={cat.name}
                       />
+                    ) : (
+                      <div className="text-center p-3">
+                        <small className="text-muted">No image available</small>
+                      </div>
+                    )}
+                    <div className="card-body text-center">
+                      <h5 className="card-title">{cat.name}</h5>
                     </div>
-                  ) : p.video?.length > 0 ? (
-                    <div>
-                      <video
-                        ref={(el) => (videoRefs.current[index] = el)} 
-                        preload="auto"
-                        width="287"
-                        height="240"
-                        controls
-                        onPlay={() => handleVideoPlay(index)} 
-                        > 
-                        <source src={`${BACKEND_URI }${p.video}`} />
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
-                  ) : (
-                    <div>No media available</div>
-                  )}
-
-                  <div className="card-body">
-                    <h5 className="card-title">{p.name}</h5>
-                    <p className="card-text">{p.description}</p>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            ) : (
+              <p className="text-center w-100 mt-4 text-muted">No categories available</p>
+            )}
           </div>
         </div>
       </div>

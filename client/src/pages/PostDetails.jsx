@@ -52,10 +52,13 @@ const PostDetails = () => {
 
 
 
+
   const likePost = async (e) => {
     e.preventDefault();
-  
-    try {
+
+
+    if (auth.user) {
+       try {
      
       const  {data} = await axios.put(
         
@@ -65,17 +68,21 @@ const PostDetails = () => {
         ,
         {userId:userId} );
       
-           toast.success(" Updated Successfully");
+           toast.success(" Successfully");
          setLikes(data.data.likes);
     
     } catch (error) {
       console.log(error);
       toast.error("something went wrong");
     }
-  };
+ 
+    } else {
+      toast("autifincate pentru a pune like");
+    }
+    };
 
 
-  console.log(post);
+  
   
   return (
     <Layout>

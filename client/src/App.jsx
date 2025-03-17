@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-//import Posts from "./pages/Posts";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Policy from "./pages/Policy";
@@ -19,6 +18,7 @@ import Users from "./pages/Admin/Users";
 import Orders from "./pages/user/Orders";
 import Profile from "./pages/user/Profile";
 import PostsAdmin from "./pages/Admin/PostsAdmin";
+import PostsCategoryAdmin from "./pages/Admin/PostsCategoryAdmin ";
 import UpdatePost from "./pages/Admin/UpdatePost";
 import Search from "./pages/Search";
 import PostDetails from "./pages/PostDetails";
@@ -59,6 +59,7 @@ function App() {
           <Route path="admin/create-videopost" element={<CreateVideoPost />} />
           <Route path="admin/post/:id" element={<UpdatePost />} />
           <Route path="admin/posts" element={<PostsAdmin />} />
+          <Route path="admin/categoryposts/:id" element={<PostsCategoryAdmin />} />
           <Route path="admin/users" element={<Users />} />
           <Route path="admin/profil" element={<AdminProfil />} />
         </Route>

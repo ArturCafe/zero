@@ -19,10 +19,15 @@ const Pagination = props => {
     siblingCount,
     pageSize
   });
-  console.log( totalCount);
+  console.log(paginationRange.length);
+  
 
   if (currentPage === 0 || paginationRange.length < 2) {
-    return null;
+
+    return(
+      <h2>dfgh</h2>
+    )
+   // return null;
   }
 
   const onNext = () => {
@@ -34,6 +39,7 @@ const Pagination = props => {
   };
 
   let lastPage = paginationRange[paginationRange.length - 1];
+
   return (
     <ul
       className={classnames('pagination-container', { [className]: className })}

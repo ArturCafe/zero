@@ -43,11 +43,15 @@ const CreatePhotoPost = () => {
         postData
       );
       if (data) {
-        toast.success("Product Created Successfully");
-        navigate("/dashboard/admin/posts");
+        toast.success("Postt Created Successfully");
+        setName("");
+        setDescription("");
+       
+        setPhoto("");
+       // navigate("/dashboard/admin/posts");
 
       } else {
-        toast.error(/*-data?.message*/ 'ttttt');
+        toast.error(/*-data?.message*/ 'error');
 
       }
     } catch (error) {

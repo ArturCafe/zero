@@ -12,7 +12,7 @@ const { Option } = Select;
 
 const UpdatePost = () => {
 
-    const categories = useCategory();
+ const categories = useCategory();
 
   const navigate = useNavigate();
   const params = useParams();

@@ -30,7 +30,9 @@ const Login = () => {
       });
 
       if (res && res.data.success) {
+        
         toast.success(res.data && res.data.message);
+
         setAuth({
           ...auth,
           user: res.data.user,

@@ -4,7 +4,7 @@ import React from "react";
 
 const CommentList = ({comments}) => {
 
-  console.log(comments);
+
   
 if (!comments) {
   return(

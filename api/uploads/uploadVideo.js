@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
   fileFilter: function (req, file, cb) {
     var ext = path.extname(file.originalname);
 
-    if (ext !== ".mkv" && ext !== ".mp4") {
+    if (ext !== ".mkv" && ext !== ".mp4" && ext !== ".webm") {
       return cb(new Error("Only videos are allowed!"));
     }
 

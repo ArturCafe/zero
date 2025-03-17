@@ -14,7 +14,12 @@ export const usePagination = ({
   siblingCount = 1,
   currentPage
 }) => {
+
+
+  console.log("usePagination", currentPage);
+  
   const paginationRange = useMemo(() => {
+    
     const totalPageCount = Math.ceil(totalCount / pageSize);
     const totalPageNumbers = siblingCount + 5;  // Calcularea numărului total de pagini de afișat
 

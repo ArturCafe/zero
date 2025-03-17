@@ -4,7 +4,8 @@ import postModel from "../models/postModel.js";
 import commentModel from "../models/commentModel.js";
 import fs from "fs";
 import path from "path";
-import slugify from "slugify";
+
+
 import dotenv from "dotenv";
 
 
@@ -14,178 +15,157 @@ import dotenv from "dotenv";
   
 dotenv.config();
 
-export const   createVideoControler = async (req, res) => {
-  const { name, postedBy, description, category } = req.body;
-  
-  let videoPaths = [];
 
-  if (Array.isArray(req.files.video) && req.files.video.length > 0) {
-    for (let video of req.files.video) {
-      videoPaths.push("/" + video.path);
-    }
-  }
-
-  switch (true) {
-
-    case !name:
-      return res.status(500).send({ error: "name is Required" });
-      
-    case !postedBy:
-        return res.status(500).send({ error: "postedBy is Required" });  
-      
-    case !description:
-        return res.status(500).send({ error: "description is Required" });
-
-   case !category:
-      return res.status(500).send({ error: "category is Required" });
-
-  }
- 
-  const user = await userModel.findById(postedBy);
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  if (user._id.toString() !== postedBy.toString()) {
-    return res.status(401).json({ error: "Unauthorized to create post" });
-  }
-
-  
+// filters  in lucru
+export const postFiltersController = async (req, res) => {
   try {
-    const createdMedia = await postModel.create({
-
-      name,
-      postedBy,
-      description,
-      category,
-      video: videoPaths,
+    const { checked, radio } = req.body;
+    let args = {};
+    if (checked.length > 0) args.category = checked;
+    if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
+    const posts = await postModel.find(args);
+    res.status(200).send({
+      success: true,
+      posts,
     });
-  
-    res.json({ message: "Media created successfully", createdMedia });
-
   } catch (error) {
     console.log(error);
-    res.status(400).json(error);
+    res.status(400).send({
+      success: false,
+      message: "Error WHile Filtering Products",
+      error,
+    });
   }
 };
 
-//ok
-export const  createPhotoControler = async (req, res) => {
-  const { name, postedBy, description, category } = req.body;
-  
-  let photoPaths = [];
-
-  if (Array.isArray(req.files.photo) && req.files.photo.length > 0) {
-    for (let photo of req.files.photo) {
-      photoPaths.push("/" + photo.path);
-    }
-  }
-
-  switch (true) {
-
-    case !name:
-      return res.status(500).send({ error: "name is Required" });
-      
-    case !postedBy:
-        return res.status(500).send({ error: "postedBy is Required" });  
-      
-    case !description:
-        return res.status(500).send({ error: "description is Required" });
-
-   case !category:
-      return res.status(500).send({ error: "category is Required" });
-
-  }
- 
-  const user = await userModel.findById(postedBy);
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  if (user._id.toString() !== postedBy.toString()) {
-    return res.status(401).json({ error: "Unauthorized to create post" });
-  }
 
   
-  try {
-    const createdMedia = await postModel.create({
 
-      name,
-      postedBy,
-      description,
-      category,
-      photo: photoPaths,
+export const getCategoryPostsController = async (req, res) => {
+  const { category, page = 1, limit = 20 } = req.query; // Default to page 1 and limit 20
+  const skip = (page - 1) * limit; // Calculate how many posts to skip
+
+  if (!category) {
+    return res.status(400).json({
+      success: false,
+      message: "Category is required",
     });
-  
-    res.json({ message: "Media created successfully", createdMedia });
-
-  } catch (error) {
-    console.log(error);
-    res.status(400).json(error);
   }
-};
-
-//getPostsController
-//get all products
-/*
-export const getPostsController = async (req, res) => {
 
   try {
     const posts = await postModel
-      .find({})
-       .populate("category")
-       .populate( "postedBy")
-      // .populate( "comments")
-      // .select("photo")
-     //  .select("video")
-      .limit(12)
-      .sort({ createdAt: -1 });
-    res.status(200).send({
+      .find({ category }) // Find posts that belong to the given category
+      .populate("category") 
+      .populate("postedBy")
+      .populate("comments")
+      .skip(skip) // Skip posts for pagination
+      .limit(Number(limit)); // Ensure limit is a number
+
+    res.status(200).json({
       success: true,
-      //  counTotal: products.length,
-      message: "ALlProducts ",
+      message: "Posts fetched successfully",
       posts,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).send({
+    console.error(error);
+    res.status(500).json({
       success: false,
-      message: "Erorr in getting products",
-      error: error.message,
+      message: "Error while fetching posts by category",
+      error,
     });
   }
 };
 
-*/
+
+export const getSearchPostsController = async(req, res) => {
+  try {
+    // Destructure query parameters
+    const { currentPage, limit , category, name } = req.query;
+
+    // Parse categories
+    const categories = Array.isArray(category) ? [...new Set(category)] : (category ? [category] : []);
 
 
-export const getPostsController = async (req, res) => {
-
-  const PAGE_SIZE = 3;
-  const pageNumber = parseInt(req.query.currentPage -1 || "0");
-
+    // Construct filter
+    const filter = {};
+    if (categories.length > 0) {
+     filter.category = { $in: categories };
+ }
+     if (name) {
+     
+        filter.name = new RegExp(name, 'i'); // 'i' makes the search case-insensitive
+    }
   
-   try {
-  const totalPosts = await postModel.countDocuments({});
-  const posts = await postModel.find({})
-    .limit(PAGE_SIZE)
-    .skip(PAGE_SIZE * pageNumber );
-   
     
-    res.json({
-      total: Math.ceil(totalPosts),
+
+    // Fetch total posts count
+    const postsCount = await postModel.countDocuments(filter);
+
+
+    // Fetch paginated posts
+    const posts = await postModel.find(filter)
+      .skip((currentPage - 1) * limit)
+      .limit(Number(limit));
+
+    // Respond with results
+    res.status(200).json({
       posts,
-      
+      totalPosts: postsCount,
+     
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching posts" });
+    console.error('Error fetching posts:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 
-//getSinglePostController
+// getPostsController
+
+export const getPostsController = async(req, res) => {
+  try {
+    // Destructure query parameters
+    const { currentPage, limit , category, name } = req.query;
+
+    // Parse categories
+    const categories = Array.isArray(category) ? [...new Set(category)] : (category ? [category] : []);
+
+
+    // Construct filter
+    const filter = {};
+    if (categories.length > 0) {
+      filter.category = { $in: categories };
+    }
+    if (name) {
+      // Use regular expression for case-insensitive search on the 'name' field
+      filter.name = new RegExp(name, 'i'); // 'i' makes the search case-insensitive
+    }
+    
+
+    // Fetch total posts count
+    const postsCount = await postModel.countDocuments(filter);
+    
+
+    // Fetch paginated posts
+    const posts = await postModel.find(filter)
+      .skip((currentPage - 1) * limit)
+      .limit(Number(limit));
+
+    // Respond with results
+    res.status(200).json({
+      posts,
+      totalPosts: postsCount,
+     
+    });
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+
 // get single product
 export const getSinglePostController = async (req, res) => {
   try {
@@ -211,6 +191,33 @@ export const getSinglePostController = async (req, res) => {
   }
 };
 
+// get
+export const postCategoryController = async (req, res) => {
+  try {
+   
+    const category = await categoryModel.findOne({name: req.params.name });
+
+   const posts = await postModel.find({ category}).populate("category");
+   
+ //  const likes = await likesModel.find({namePost: req.posts.name });
+  //const posts = await postModel.find({ category, likes})
+  // .populate("category, likes");
+
+    res.status(200).send({
+      success: true,
+      category,
+      posts,
+     // likes
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      error,
+      message: "Error While Getting products",
+    });
+  }
+};
 
 //  userComment   commentPost
 export const  commentPostController= async (req, res) => {
@@ -305,66 +312,8 @@ export const postPhotoController = async (req, res) => {
   }
 };
 
-//delete controller
-export const deletePostController = async (req, res) => {
-  console.log(req.params.pid);
-  try {
-    await postModel.findByIdAndDelete(req.params.pid).select("-photo");
-    res.status(200).send({
-      success: true,
-      message: "Product Deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      success: false,
-      message: "Error while deleting product",
-      error,
-    });
-  }
-    
-};
 
 
-// filters
-export const postFiltersController = async (req, res) => {
-  try {
-    const { checked, radio } = req.body;
-    let args = {};
-    if (checked.length > 0) args.category = checked;
-    if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
-    const posts = await postModel.find(args);
-    res.status(200).send({
-      success: true,
-      posts,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message: "Error WHile Filtering Products",
-      error,
-    });
-  }
-};
-
-// product count
-export const postCountController = async (req, res) => {
-  try {
-    const total = await postModel.find({}).estimatedDocumentCount();
-    res.status(200).send({
-      success: true,
-      total,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      message: "Error in product count",
-      error,
-      success: false,
-    });
-  }
-};
 
 // product list base on page
 export const postListController = async (req, res) => {
@@ -391,28 +340,6 @@ export const postListController = async (req, res) => {
   }
 };
 
-// search product
-export const searchPostController = async (req, res) => {
-  try {
-    const { keyword } = req.params;
-    const resutls = await postModel
-      .find({
-        $or: [
-          { name: { $regex: keyword, $options: "i" } },
-          { description: { $regex: keyword, $options: "i" } },
-        ],
-      })
-      .select("-photo");
-    res.json(resutls);
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      message: "Error In Search Product API",
-      error,
-    });
-  }
-};
 
 // similar products
 export const realtedPostController = async (req, res) => {
@@ -440,33 +367,6 @@ export const realtedPostController = async (req, res) => {
   }
 };
 
-// get prdocyst by catgory
-export const postCategoryController = async (req, res) => {
-  try {
-   
-    const category = await categoryModel.findOne({name: req.params.name });
-
-   const posts = await postModel.find({ category}).populate("category");
-   
- //  const likes = await likesModel.find({namePost: req.posts.name });
-  //const posts = await postModel.find({ category, likes})
-  // .populate("category, likes");
-
-    res.status(200).send({
-      success: true,
-      category,
-      posts,
-     // likes
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      success: false,
-      error,
-      message: "Error While Getting products",
-    });
-  }
-};
 
 // product count
 export const getCommentsController = async (req, res) => {

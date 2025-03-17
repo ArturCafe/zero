@@ -8,58 +8,55 @@ import { BACKEND_URI } from "../../config/constants";
 import useCategory from "../../hooks/useCategory";
 import { Select } from "antd";
 import { useNavigate } from "react-router-dom";
+import { Spin } from "antd"; // Import pentru loader
 const { Option } = Select;
 
 const CreateVideoPost = () => {
-
   const navigate = useNavigate();
   const categorile = useCategory();
-
 
   const [name, setName] = useState("name");
   const [description, setDescription] = useState("description");
   const [category, setCategory] = useState("");
-  const [photo, setPhoto] = useState("");
   const [video, setVideo] = useState([]);
-  const [auth ] = useAuth();
+  const [auth] = useAuth();
+  const [loading, setLoading] = useState(false); // Gestionare stare de încărcare
 
-
-  //create product function
+  // Funcția pentru a crea postarea video
   const handleCreate = async (e) => {
-
     e.preventDefault();
+    setLoading(true); // Pornim loaderul
     try {
       const postData = new FormData();
       for (let key in video) {
         postData.append("video", video[key]);
-        
       }
       postData.append("name", name);
       postData.append("video", video);
       postData.append("category", category);
       postData.append("description", description);
-      postData.append("postedBy", auth.user._id );
+      postData.append("postedBy", auth.user._id);
 
       const { data } = await axios.post(
-
-         `${BACKEND_URI}/v1/posts/create-videopost`,
-           postData
+        `${BACKEND_URI}/v1/posts/create-videopost`,
+        postData
       );
       if (data) {
         toast.success("Product Created Successfully");
         navigate("/dashboard/admin/posts");
       } else {
         toast.error(data?.message);
-
       }
     } catch (error) {
       console.log(error);
-      toast.error("something went wrong");
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false); // Oprim loaderul
     }
   };
 
   return (
-    <Layout >
+    <Layout>
       <div className="container-fluid m-3 p-3 dashboard">
         <div className="row">
           <div className="col-md-3">
@@ -69,14 +66,11 @@ const CreateVideoPost = () => {
             <h1>Create VideoPost</h1>
             <div className="m-1 w-75">
               <Select
-             
-                placeholder="fa click pentru a selecta"
+                placeholder="Click to select category"
                 size="large"
                 showSearch
                 className="form-select mb-3"
-                onChange={(value) => {
-                  setCategory(value);
-                }}
+                onChange={(value) => setCategory(value)}
               >
                 {categorile?.map((c) => (
                   <Option key={c._id} value={c._id}>
@@ -86,38 +80,24 @@ const CreateVideoPost = () => {
               </Select>
               <div className="mb-3">
                 <label className="btn btn-outline-secondary col-md-12">
-                  {photo ? photo.name : "Upload "}
-                 
-          <input
-            type="file"
-            name="videos"
-            id="videos"
-            multiple
-            className="form-control"
-            accept=".mp4, .mkv"
-            onChange={(e) => {
-              setVideo(e.target.files);
-            }}
-          />
+         
+                  <input
+                    type="file"
+                    name="videos"
+                    id="videos"
+                    multiple
+                    className="form-control"
+                    accept=".mp4, .mkv, .webm"
+                    onChange={(e) => setVideo(e.target.files)}
+                  />
                 </label>
               </div>
-              <div className="mb-3">
-                {photo && (
-                  <div className="text-center">
-                    <img
-                      src={URL.createObjectURL(photo)}
-                      alt="product_photo"
-                      height={"200px"}
-                      className="img img-responsive"
-                    />
-                  </div>
-                )}
-              </div>
+              
               <div className="mb-3">
                 <input
                   type="text"
                   value={name}
-                  placeholder="write a name"
+                  placeholder="Write a name"
                   className="form-control"
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -126,19 +106,26 @@ const CreateVideoPost = () => {
                 <textarea
                   type="text"
                   value={description}
-                  placeholder="write a description"
+                  placeholder="Write a description"
                   className="form-control"
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
-
-
               <div className="mb-3">
-
-                <button className="btn btn-primary" onClick={handleCreate}>
-                  CREATE PosT
+                <button
+                  className="btn btn-primary"
+                  onClick={handleCreate}
+                  disabled={loading}
+                >
+                  {loading ? <Spin size="small" /> : "CREATE POST"}
                 </button>
               </div>
+              {loading && (
+                <div className="text-center mt-3">
+                  <Spin size="large" />
+               
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -147,4 +134,5 @@ const CreateVideoPost = () => {
   );
 };
 
-export default CreateVideoPost
+export default CreateVideoPost;
+
